@@ -41,14 +41,18 @@ Built to demonstrate expertise in **PostgreSQL internals**, **distributed system
 
 ## 📸 Demo
 
-![Benchmark Results](screenshots/benchmark_results.png)
-*Agent achieved 81.2% optimization on first query through autonomous IVFFlat index selection*
+<div align="center">
+  <img width="800" alt="benchmark_results" src="https://github.com/user-attachments/assets/778b0e24-ef7e-4620-bd9c-e32bf75adb28" />
+  <p><em>Agent achieved 81.2% optimization on first query through autonomous IVFFlat index selection</em></p>
+  <br>
 
-![Agent Decision](screenshots/agent_decision.png)
-*LLM-powered reasoning: Observe → Reason → Act → Verify loop in action*
+  <img width="600" alt="agent_decision" src="https://github.com/user-attachments/assets/ef9524eb-07f0-47b1-b20a-5e4c0fe4d68a" />
+  <p><em>LLM-powered reasoning: Observe → Reason → Act → Verify loop in action</em></p>
+  <br>
 
-![Project Summary](screenshots/project_summary.png)
-*Complete metrics: 995 documents, 28 total optimizations, 100% success rate*
+  <img width="800" alt="project_summary" src="https://github.com/user-attachments/assets/a86b022f-4bac-4c0f-b060-4a929577f620" />
+  <p><em>Complete metrics: 995 documents, 28 total optimizations, 100% success rate</em></p>
+</div>
 
 ---
 
