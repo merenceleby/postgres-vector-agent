@@ -2,9 +2,6 @@
 
 An autonomous AI agent that monitors, analyzes, and optimizes PostgreSQL vector similarity search performance using LLM-powered decision making for production RAG workloads.
 
-> *Built a 3-phase benchmark harness that separates cache warming from real index gains, achieving 99.7% query latency reduction through autonomous LLM-driven index selection*
-
-
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/Python-3.10+-green)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -47,7 +44,6 @@ Built to demonstrate expertise in **PostgreSQL internals**, **distributed system
 
 ![Benchmark Results](screenshots/benchmark_results.png)
 *Phase 1 → Phase 3 comparison: ~29ms baseline dropped to ~0.11ms after autonomous IVFFlat index creation*
-
 
 
 ![Project Summary](screenshots/project_summary.png)
@@ -123,6 +119,7 @@ source venv/bin/activate  # Linux/Mac
 
 # 4. Load sample data
 python scripts/load_data.py --num-docs 1000
+python scripts/clean_indexes.py
 
 # 5. Run benchmark
 python scripts/benchmark.py
@@ -364,11 +361,9 @@ db.insert_documents(documents)
 
 ---
 
-
 ## 📝 License
 
 MIT License - see [LICENSE](LICENSE) file
-
 ---
 
 
