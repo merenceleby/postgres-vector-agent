@@ -194,16 +194,20 @@ class AutoTuningAgent:
             logger.info(f"\n{Fore.YELLOW}🔍 Verifying optimization impact...{Style.RESET_ALL}")
             time.sleep(2)  # Wait for index to be ready
             analysis_after = self.observe(query_embedding, tenant_id)
-            
-            # Calculate improvement
-            time_before = analysis_before['execution_time_ms']
-            time_after = analysis_after['execution_time_ms']
-            improvement = ((time_before - time_after) / time_before) * 100
-            
-            logger.info(f"\n{Fore.GREEN}📈 IMPROVEMENT: {improvement:.1f}%{Style.RESET_ALL}")
-            logger.info(f"{Fore.GREEN}   Before: {time_before:.2f} ms → After: {time_after:.2f} ms{Style.RESET_ALL}")
-            
-            self.total_improvement += improvement
+
+            if not analysis_after['index_used']:
+                logger.info(f"\n{Fore.RED}⚠️ Time dropped but INDEX WAS NOT USED (Cache Warming only)!{Style.RESET_ALL}")
+                improvement = 0.0
+            else:
+                # Calculate improvement
+                time_before = analysis_before['execution_time_ms']
+                time_after = analysis_after['execution_time_ms']
+                improvement = ((time_before - time_after) / time_before) * 100
+
+                logger.info(f"\n{Fore.GREEN}📈 REAL IMPROVEMENT: {improvement:.1f}%{Style.RESET_ALL}")
+                logger.info(f"{Fore.GREEN}   Before: {time_before:.2f} ms → After: {time_after:.2f} ms{Style.RESET_ALL}")
+
+                self.total_improvement += improvement
         
         cycle_time = (time.time() - cycle_start)
         

@@ -1,5 +1,5 @@
 """
-Run benchmarks and demonstrate agent optimization
+Run benchmarks and demonstrate agent optimization (3-Phase Baseline Testing)
 """
 
 import sys
@@ -11,12 +11,12 @@ from colorama import Fore, Style
 import time
 import logging
 from summary import display_summary
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 def main():
-    """Run the complete benchmark"""
+    """Run the complete 3-phase benchmark"""
     
     print(f"\n{Fore.CYAN}{'='*70}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}🎯 AUTO-TUNING POSTGRESQL VECTOR STORE AGENT - BENCHMARK{Style.RESET_ALL}")
@@ -36,59 +36,80 @@ def main():
     agent = AutoTuningAgent()
     
     try:
-        # Run optimization cycles
-        results = []
+        baseline_times = []
+        optimized_times = []
+
+        # ==========================================
+        # PHASE 1: BASELINE (Test without Index)
+        # ==========================================
+        print(f"\n{Fore.MAGENTA}{'='*70}{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}PHASE 1: BASELINE PERFORMANCE TEST (No Index){Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}{'='*70}{Style.RESET_ALL}")
         
         for i, query in enumerate(test_queries, 1):
-            print(f"\n{Fore.YELLOW}{'='*70}{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Query {i}/{len(test_queries)}: '{query}'{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}{'='*70}{Style.RESET_ALL}\n")
+            # Generate embedding
+            query_embedding = agent.embedder.encode_query(query)
             
-            result = agent.run_optimization_cycle(query, tenant_id='wikipedia')
-            results.append(result)
+            # Observe only, no optimization triggered
+            analysis = agent.observe(query_embedding, tenant_id='wikipedia')
+            baseline_times.append(analysis['execution_time_ms'])
             
-            # Brief summary
-            if result['improvement_percentage']:
-                print(f"\n{Fore.GREEN}✅ Optimization Result:{Style.RESET_ALL}")
-                print(f"   Action: {result['decision']['action']}")
-                print(f"   Improvement: {result['improvement_percentage']:.1f}%")
-                print(f"   Before: {result['analysis_before']['execution_time_ms']:.2f} ms")
-                print(f"   After: {result['analysis_after']['execution_time_ms']:.2f} ms")
-            else:
-                print(f"\n{Fore.YELLOW}ℹ️  No optimization performed{Style.RESET_ALL}")
-            
-            # Small delay between queries
-            if i < len(test_queries):
-                time.sleep(2)
+            print(f"Query {i} (Baseline): {analysis['execution_time_ms']:.2f} ms | Index Used: {analysis['index_used']}")
+
+        # ==========================================
+        # PHASE 2: AGENT OPTIMIZATION
+        # ==========================================
+        print(f"\n{Fore.YELLOW}{'='*70}{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}PHASE 2: AGENT TAKES ACTION (Triggered by Query 1){Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}{'='*70}{Style.RESET_ALL}")
         
-        # Final statistics
+        # The agent will detect poor performance on the first query and create an index
+        agent.run_optimization_cycle(test_queries[0], tenant_id='wikipedia')
+        
+        # Short delay to ensure the index is fully ready and registered
+        time.sleep(2)
+
+        # ==========================================
+        # PHASE 3: VERIFICATION (Test with Index)
+        # ==========================================
+        print(f"\n{Fore.GREEN}{'='*70}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}PHASE 3: POST-OPTIMIZATION VERIFICATION (All Queries){Style.RESET_ALL}")
+        print(f"{Fore.GREEN}{'='*70}{Style.RESET_ALL}")
+        
+        for i, query in enumerate(test_queries, 1):
+            # Generate embedding
+            query_embedding = agent.embedder.encode_query(query)
+            
+            # Observe again to see the impact of the newly created index
+            analysis = agent.observe(query_embedding, tenant_id='wikipedia')
+            optimized_times.append(analysis['execution_time_ms'])
+            
+            print(f"Query {i} (Optimized): {analysis['execution_time_ms']:.2f} ms | Index Used: {analysis['index_used']}")
+
+        # ==========================================
+        # FINAL RESULTS & SUMMARY
+        # ==========================================
         print(f"\n\n{Fore.CYAN}{'='*70}{Style.RESET_ALL}")
-        print(f"{Fore.CYAN}📊 BENCHMARK SUMMARY{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}📊 BENCHMARK COMPARISON SUMMARY{Style.RESET_ALL}")
         print(f"{Fore.CYAN}{'='*70}{Style.RESET_ALL}\n")
         
-        stats = agent.get_statistics()
-        print(f"Total Queries: {len(test_queries)}")
-        print(f"Optimizations Performed: {stats['optimizations_performed']}")
-        print(f"Average Improvement: {stats['average_improvement']:.1f}%")
-        
-        # Detailed results
-        print(f"\n{Fore.CYAN}Detailed Results:{Style.RESET_ALL}\n")
-        for i, result in enumerate(results, 1):
-            if result['improvement_percentage']:
-                print(f"Query {i}: {Fore.GREEN}{result['improvement_percentage']:.1f}% improvement{Style.RESET_ALL}")
+        for i, query in enumerate(test_queries):
+            t_before = baseline_times[i]
+            t_after = optimized_times[i]
+            
+            # Calculate improvement percentage safely
+            if t_before > 0:
+                improvement = ((t_before - t_after) / t_before) * 100
             else:
-                print(f"Query {i}: {Fore.YELLOW}No optimization needed{Style.RESET_ALL}")
-        
-        print(f"\n{Fore.GREEN}✅ Benchmark complete!{Style.RESET_ALL}\n")
-        display_summary()
+                improvement = 0.0
 
+            print(f"Query {i+1}: '{query[:35]}...'")
+            print(f"  Before: {Fore.RED}{t_before:.2f} ms{Style.RESET_ALL} -> After: {Fore.GREEN}{t_after:.2f} ms{Style.RESET_ALL} (Improvement: {improvement:.1f}%)\n")
+
+        print(f"\n{Fore.GREEN}✅ Benchmark complete!{Style.RESET_ALL}\n")
         
-        # Suggestions
-        print(f"{Fore.CYAN}Next Steps:{Style.RESET_ALL}")
-        print("1. Check Grafana dashboard: http://localhost:3000")
-        print("2. View query metrics: SELECT * FROM rag_system.query_metrics;")
-        print("3. View agent actions: SELECT * FROM rag_system.agent_actions;")
-        print("4. Review index registry: SELECT * FROM rag_system.index_registry;")
+        # Display the overall project summary
+        display_summary()
         
     except KeyboardInterrupt:
         print(f"\n{Fore.YELLOW}⚠️  Benchmark interrupted by user{Style.RESET_ALL}")
@@ -97,7 +118,6 @@ def main():
         raise
     finally:
         agent.close()
-
 
 if __name__ == '__main__':
     main()

@@ -2,6 +2,9 @@
 
 An autonomous AI agent that monitors, analyzes, and optimizes PostgreSQL vector similarity search performance using LLM-powered decision making for production RAG workloads.
 
+> *Built a 3-phase benchmark harness that separates cache warming from real index gains, achieving 99.7% query latency reduction through autonomous LLM-driven index selection*
+
+
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/Python-3.10+-green)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -27,28 +30,28 @@ Built to demonstrate expertise in **PostgreSQL internals**, **distributed system
 
 | Query | Before | After | Improvement |
 |-------|--------|-------|-------------|
-| AI & ML | 10.99ms | 2.07ms | **81.2%** ↑ |
-| Climate Change | 2.98ms | 1.97ms | **33.9%** ↑ |
-| Quantum Computing | 2.92ms | 2.06ms | **29.5%** ↑ |
-| Renewable Energy | 2.99ms | 2.15ms | **28.0%** ↑ |
-| Space Exploration | 2.06ms | 2.03ms | **1.5%** ↑ |
+| AI & ML | 204.18ms | 0.13ms | **99.9%** ↑ |
+| Climate Change | 28.70ms | 0.11ms | **99.6%** ↑ |
+| Quantum Computing | 32.34ms | 0.12ms | **99.6%** ↑ |
+| Renewable Energy | 29.67ms | 0.10ms | **99.7%** ↑ |
+| Space Exploration | 29.50ms | 0.10ms | **99.6%** ↑ |
 
-**Average Improvement: 34.8%**  
-**Best Performance: 81.2% faster (AI/ML query)**  
-**Success Rate: 5/5 queries optimized (100%)**
+**Average Improvement: 99.7%**  
+**Best Performance: 99.9% faster (AI/ML query — 204ms → 0.13ms)**  
+**Success Rate: 5/5 queries optimized (100%)**  
+**Index Created: 1× IVFFlat (autonomous, no human intervention)**
 
 ---
 
 ## 📸 Demo
 
 ![Benchmark Results](screenshots/benchmark_results.png)
-*Agent achieved 81.2% optimization on first query through autonomous IVFFlat index selection*
+*Phase 1 → Phase 3 comparison: ~29ms baseline dropped to ~0.11ms after autonomous IVFFlat index creation*
 
-![Agent Decision](screenshots/agent_decision.png)
-*LLM-powered reasoning: Observe → Reason → Act → Verify loop in action*
+
 
 ![Project Summary](screenshots/project_summary.png)
-*Complete metrics: 995 documents, 28 total optimizations, 100% success rate*
+*Complete metrics: 995 documents loaded, 1 index created, 100% success rate*
 
 ---
 
@@ -126,20 +129,48 @@ python scripts/benchmark.py
 ```
 
 **Expected output:**
+
 ```
 🎯 AUTO-TUNING POSTGRESQL VECTOR STORE AGENT - BENCHMARK
 
-Query 1/5: 'artificial intelligence and machine learning'
-📊 Execution Time: 10.99 ms (Before)
-🧠 LLM Decision: create_ivfflat_index
-⚡ Creating IVFFlat index...
-✅ Index created successfully
-📈 IMPROVEMENT: 81.2%
-   Before: 10.99 ms → After: 2.07 ms
+======================================================================
+PHASE 1: BASELINE PERFORMANCE TEST (No Index)
+======================================================================
+Query 1 (Baseline): 204.18 ms | Index Used: False
+Query 2 (Baseline):  28.70 ms | Index Used: False
+Query 3 (Baseline):  32.34 ms | Index Used: False
+Query 4 (Baseline):  29.67 ms | Index Used: False
+Query 5 (Baseline):  29.50 ms | Index Used: False
 
 ======================================================================
-📊 BENCHMARK SUMMARY
-Average Improvement: 34.8%
+PHASE 2: AGENT TAKES ACTION (Triggered by Query 1)
+======================================================================
+👁️  OBSERVE: Execution Time: 32.16 ms | Index Used: False
+🧠 REASON:  LLM Decision: create_ivfflat_index
+⚡ ACT:     Creating IVFFlat index: idx_embedding_ivfflat_wikipedia
+✅          Index created successfully
+📈 REAL IMPROVEMENT: 99.7%
+            Before: 32.16 ms → After: 0.09 ms
+
+======================================================================
+PHASE 3: POST-OPTIMIZATION VERIFICATION (All Queries)
+======================================================================
+Query 1 (Optimized): 0.13 ms | Index Used: True
+Query 2 (Optimized): 0.11 ms | Index Used: True
+Query 3 (Optimized): 0.12 ms | Index Used: True
+Query 4 (Optimized): 0.10 ms | Index Used: True
+Query 5 (Optimized): 0.10 ms | Index Used: True
+
+======================================================================
+📊 BENCHMARK COMPARISON SUMMARY
+======================================================================
+Query 1: Before: 204.18 ms -> After: 0.13 ms (Improvement: 99.9%)
+Query 2: Before:  28.70 ms -> After: 0.11 ms (Improvement: 99.6%)
+Query 3: Before:  32.34 ms -> After: 0.12 ms (Improvement: 99.6%)
+Query 4: Before:  29.67 ms -> After: 0.10 ms (Improvement: 99.7%)
+Query 5: Before:  29.50 ms -> After: 0.10 ms (Improvement: 99.6%)
+
+✅ Benchmark complete!
 ```
 
 ---
@@ -149,11 +180,11 @@ Average Improvement: 34.8%
 ```
 postgres-vector-agent/
 ├── agent/
-│   ├── database.py           # PostgreSQL operations & EXPLAIN parsing
-│   ├── embeddings.py         # sentence-transformers integration
-│   ├── agent_core.py         # Observe-Reason-Act-Verify loop
+│   ├── database.py            # PostgreSQL operations & EXPLAIN parsing
+│   ├── embeddings.py          # sentence-transformers integration
+│   ├── agent_core.py          # Observe-Reason-Act-Verify loop
 │   ├── query_analyzer.py      # Query plan analysis
-│   └── optimizer.py          # LLM-powered decision engine
+│   └── optimizer.py           # LLM-powered decision engine
 ├── docker/
 │   ├── docker-compose.yml     # Multi-service orchestration
 │   ├── init.sql               # Schema + partitioning + extensions
@@ -164,13 +195,12 @@ postgres-vector-agent/
 ├── scripts/
 │   ├── setup.sh               # Linux/Mac automated setup
 │   ├── load_data.py           # Wikipedia data loader
-│   ├── benchmark.py           # Performance testing
+│   ├── benchmark.py           # 3-phase performance testing
 │   ├── clean_indexes.py       # Reset for testing
 │   └── summary.py             # Project metrics display
 ├── requirements.txt           # Python dependencies
 ├── setup-windows.bat          # Automated Windows setup
 └── README.md                  # Project documentation
-
 ```
 
 ---
@@ -188,7 +218,7 @@ postgres-vector-agent/
 - Chooses between HNSW (speed) vs IVFFlat (memory)
 - Low temperature (0.3) for consistent technical decisions
 
-### 3. Production-Grade Infrastructure
+### 3. Production-Ready Architecture
 - Multi-tenant partitioning with row-level security
 - PgBouncer connection pooling (1000+ concurrent)
 - Master-slave replication for high availability
@@ -209,11 +239,11 @@ postgres-vector-agent/
 # Execute EXPLAIN ANALYZE
 EXPLAIN (ANALYZE, FORMAT JSON)
 SELECT content FROM documents
-ORDER BY embedding <-> '[...]'::vector
+ORDER BY embedding <=> '[...]'::vector
 LIMIT 5;
 
 # Extract metrics:
-# - Execution Time: 10.99 ms
+# - Execution Time: 204.18 ms
 # - Scan Type: Sequential Scan
 # - Index Used: False
 ```
@@ -223,7 +253,7 @@ LIMIT 5;
 # LLM receives prompt:
 """
 PERFORMANCE METRICS:
-- Execution Time: 10.99 ms
+- Execution Time: 32.16 ms
 - Scan Type: Seq Scan
 - Index Used: False
 
@@ -232,13 +262,15 @@ QUESTION: HNSW or IVFFlat?
 
 # LLM Response:
 # ACTION: create_ivfflat_index
-# REASONING: Memory efficiency for large dataset
+# REASONING: Given the high latency and absence of an index,
+#             IVFFlat's memory efficiency makes it suitable for
+#             this scenario, balancing speed and resource consumption
 # EXPECTED: 20-40x faster
 ```
 
 ### Action Phase
 ```sql
--- Agent executes:
+-- Agent executes autonomously:
 CREATE INDEX idx_embedding_ivfflat_wikipedia
 ON rag_system.documents
 USING ivfflat (embedding vector_cosine_ops)
@@ -247,10 +279,10 @@ WITH (lists = 100);
 
 ### Verification Phase
 ```python
-# Re-measure:
-# Before: 10.99 ms
-# After:  2.07 ms
-# Improvement: 81.2%
+# Re-measure after index creation:
+# Before: 32.16 ms
+# After:   0.09 ms
+# Improvement: 99.7%
 
 # Log to database
 INSERT INTO rag_system.agent_actions...
@@ -317,7 +349,6 @@ documents = [{
     'embedding': embedder.encode_query('Your text'),
     'metadata': {}
 }]
-
 db.insert_documents(documents)
 ```
 
