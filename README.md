@@ -42,11 +42,12 @@ Built to demonstrate expertise in **PostgreSQL internals**, **distributed system
 
 ## 📸 Demo
 
-![Benchmark Results](screenshots/benchmark_results.png)
+<img width="801" height="519" alt="bencmark comprasion summary" src="https://github.com/user-attachments/assets/d065130a-fc7a-4076-ad25-9223e4d44bf3" />
+
 *Phase 1 → Phase 3 comparison: ~29ms baseline dropped to ~0.11ms after autonomous IVFFlat index creation*
 
+<img width="795" height="506" alt="project summary" src="https://github.com/user-attachments/assets/2c5eec42-d560-43e2-8623-3aaf3bbdf0ad" />
 
-![Project Summary](screenshots/project_summary.png)
 *Complete metrics: 995 documents loaded, 1 index created, 100% success rate*
 
 ---
